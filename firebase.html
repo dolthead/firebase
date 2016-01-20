@@ -7,7 +7,7 @@
         var app = angular.module("app", []);
         app.controller("MainController", MainController);
 
-        function MainController($scope, $http) {
+        function MainController($http) {
 
             // IMPORTANT: REPLACE WITH YOUR OWN FIREBASE URL
             var url = 'https://vivid-fire-7010.firebaseio.com/test';
@@ -17,19 +17,45 @@
             vm.data = [];
             vm.post = post;
             vm.get = get;
+            vm.put = put;
+            vm.deleteItem = deleteItem;
 
             function post() {
-                $http.post(url + '.json', vm.postData).then(function (response) {
-                    vm.response = response;
-                    var responseKey = response.data.name;
-                    vm.data.push({key: responseKey});
-                });
+                $http.post(url + '.json', vm.postData)
+                    .then(function (response) {
+                        vm.response = response;
+                        var responseKey = response.data.name;
+                        vm.data.push({key: responseKey});
+                    });
             }
 
             function get(item) {
                 $http.get(url + '/' + item.key + '.json').then(function (response) {
                     item.value = response.data.yourData;
                 });
+            }
+            function put(item) {
+                $http.put(url + '/' + item.key + '.json', {'yourData': item.value}).then(function (response) {
+                    console.log(response);
+                });
+            }
+            function deleteItem(item) {
+                $http.delete(url + '/' + item.key + '.json').then(function(response){
+                    if (response.status === 200) {
+                        vm.data.splice(getItemNum(item));
+                        // toaster message saying item deleted
+                    }
+                    else {
+                        // toaster message saying not deleted, network error
+                    }
+                })
+            }
+            function getItemNum(item) {
+                for (var i=0; i< vm.data.length; i++) {
+                    if (item.key == vm.data[i].key) {
+                        return i;
+                    }
+                }
             }
         }
 
@@ -54,7 +80,10 @@
                     ng-click="vm.get(item); item.clicked = true"></button>
             <p ng-show="item.clicked">
                 The data you POSTed earlier that is associated with this key is:
-                {{ item.value }}
+                <br />
+                <input ng-model="item.value">
+                <button ng-click="vm.put(item)">Update</button>
+                <button ng-click="vm.deleteItem(item)">Delete</button>
             </p>
         </div>
     </div>

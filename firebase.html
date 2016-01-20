@@ -42,7 +42,7 @@
             function deleteItem(item) {
                 $http.delete(url + '/' + item.key + '.json').then(function(response){
                     if (response.status === 200) {
-                        vm.data.splice(getItemNum(item));
+                        vm.data.splice(getItemNum(item), 1);
                         // toaster message saying item deleted
                     }
                     else {

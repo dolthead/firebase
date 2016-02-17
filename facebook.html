@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline' *; script-src 'self' 'unsafe-inline' 'unsafe-eval' *">
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/ngStorage/0.3.10/ngStorage.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ngStorage/0.3.10/ngStorage.min.js"></script>
     <script src="//cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
 
     <script>
 
         var app = angular.module('app', ['ngStorage']);
 
+        // facebook stores the data without a prefix, so remove default prefix
         app.config(['$localStorageProvider',
             function ($localStorageProvider) {
                 $localStorageProvider.setKeyPrefix('');
-            }]);
+            }
+        ]);
 
         app.controller('MainController', MainController);
 
@@ -31,10 +34,10 @@
 
             // IMPORTANT: change to match the URL of your Firebase.
             var url = 'https://vivid-fire-7010.firebaseio.com';
+            var ref = new Firebase(url);
 
             // use Firebase library to login to facebook
             function facebookLogin() {
-                var ref = new Firebase(url);
                 ref.authWithOAuthPopup('facebook', function (error, authData) {
                     if (error) {
                         console.log('Log in to Facebook Failed', error);
@@ -53,8 +56,11 @@
             // to FULLY logout, you MUST go to facebook.com and logout
             function deleteFacebookData() {
                 $localStorage.$reset();
-                vm.fbData = {};
-                vm.message = 'Facebook data deleted.'
+                vm.message = 'Facebook data deleted.';
+                $timeout(function() { // invokes $scope.$apply()
+                    vm.fbData = {};
+                });
+                ref.unauth();
             }
             // bug alert: this delete function sometimes does NOT reset the local storage,
             // so a page refresh finds facebook data in localstorage.
@@ -68,6 +74,7 @@
 
     <button ng-click="vm.facebookLogin()">Log in with Facebook</button>
     <button ng-click="vm.deleteFacebookData()">Delete data</button>
+    <br />
     <a href='https://www.facebook.com/'>Go to Facebook</a><br />
     <br />
     <div>{{ vm.message }}</div>
